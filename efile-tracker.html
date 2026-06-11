@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-File Tracker Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; min-height: 100vh; color: #1a1a1a; }
+
+  .shell { padding: 1.25rem 1.5rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon { width: 36px; height: 36px; background: #dbeafe; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #1d4ed8; font-size: 19px; }
+  .brand-text { font-size: 17px; font-weight: 600; color: #111; }
+  .brand-sub { font-size: 12px; color: #888; }
+  .user-chip { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 40px; padding: 5px 13px 5px 5px; cursor: pointer; }
+  .av { width: 28px; height: 28px; border-radius: 50%; background: #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #1e40af; }
+  .user-email { font-size: 13px; color: #555; }
+
+  .layout { display: grid; grid-template-columns: 230px 1fr; gap: 14px; align-items: start; }
+
+  .left-col { display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px 16px; }
+
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav { background: none; border: 1px solid #e5e7eb; border-radius: 7px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; font-size: 15px; }
+  .cal-nav:hover { background: #f3f4f6; }
+  .cal-month { font-size: 13px; font-weight: 600; color: #111; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-dow { font-size: 10px; color: #aaa; text-align: center; padding: 3px 0; font-weight: 600; }
+  .cal-day { font-size: 11px; text-align: center; padding: 5px 2px; border-radius: 6px; cursor: pointer; color: #555; position: relative; transition: background .1s; }
+  .cal-day:hover { background: #f3f4f6; }
+  .cal-day.today { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+  .cal-day.selected { background: #2563eb; color: #fff; font-weight: 600; }
+  .cal-day.has-file::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #16a34a; }
+  .cal-day.selected.has-file::after { background: #86efac; }
+  .cal-day.other-month { color: #ccc; }
+  .cal-legend { display: flex; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+  .cal-legend span { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #999; }
+  .dot-green { width: 7px; height: 7px; border-radius: 50%; background: #16a34a; display: inline-block; }
+  .dot-blue { width: 10px; height: 10px; border-radius: 3px; background: #2563eb; display: inline-block; }
+
+  .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .mstat { background: #f9fafb; border-radius: 9px; padding: 9px 11px; }
+  .mstat-label { font-size: 11px; color: #888; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .mstat-val { font-size: 22px; font-weight: 700; color: #111; }
+
+  .activity-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+  .activity-row:last-child { border-bottom: none; }
+  .act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .act-text { font-size: 12px; color: #555; flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .act-time { font-size: 11px; color: #bbb; }
+
+  .right-col { display: flex; flex-direction: column; gap: 10px; }
+  .toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fbtn { font-size: 11px; padding: 5px 12px; border-radius: 18px; border: 1px solid #e5e7eb; background: #fff; color: #666; cursor: pointer; transition: all .15s; }
+  .fbtn:hover { background: #f3f4f6; }
+  .fbtn.on { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; font-weight: 500; }
+  .sbox { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #e5e7eb; border-radius: 9px; padding: 6px 10px; margin-left: auto; }
+  .sbox input { border: none; outline: none; background: transparent; font-size: 12px; color: #111; width: 140px; font-family: inherit; }
+  .sbox input::placeholder { color: #bbb; }
+
+  .sel-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 9px; padding: 8px 13px; font-size: 12px; color: #1d4ed8; display: flex; align-items: center; gap: 7px; }
+  .sel-banner button { margin-left: auto; background: none; border: none; cursor: pointer; color: #1d4ed8; font-size: 14px; display: flex; align-items: center; }
+
+  .tbl-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  thead tr { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+  th { padding: 10px 11px; text-align: left; font-weight: 600; color: #888; font-size: 11px; white-space: nowrap; }
+  td { padding: 10px 11px; color: #111; border-bottom: 1px solid #f3f4f6; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  .badge { display: inline-flex; align-items: center; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+  .b-ok { background: #dcfce7; color: #15803d; }
+  .b-pend { background: #fef3c7; color: #92400e; }
+  .b-rev { background: #dbeafe; color: #1d4ed8; }
+  .b-rej { background: #fee2e2; color: #b91c1c; }
+
+  .abt { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 7px; cursor: pointer; color: #888; font-size: 13px; transition: all .1s; }
+  .abt:hover { background: #f3f4f6; color: #111; }
+
+  .empty-row { text-align: center; padding: 2rem; color: #bbb; font-size: 13px; }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="ti ti-files"></i></div>
+      <div>
+        <div class="brand-text">E-File Tracker</div>
+        <div class="brand-sub">Document management portal</div>
+      </div>
+    </div>
+    <div class="user-chip">
+      <div class="av">RP</div>
+      <span class="user-email">rahul.patil@gmail.com</span>
+      <i class="ti ti-chevron-down" style="font-size:12px;color:#aaa;margin-left:2px"></i>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="left-col">
+
+      <div class="card">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="prevMonth()" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+          <span class="cal-month" id="calTitle"></span>
+          <button class="cal-nav" onclick="nextMonth()" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><span class="dot-green"></span> has files</span>
+          <span><span class="dot-blue"></span> selected</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:9px;display:flex;align-items:center;gap:5px"><i class="ti ti-chart-pie" style="font-size:14px"></i>Overview</div>
+        <div class="mini-stats" id="miniStats"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:9px;display:flex;align-items:center;gap:5px"><i class="ti ti-activity" style="font-size:14px"></i>Recent activity</div>
+        <div id="activityFeed"></div>
+      </div>
+
+    </div>
+
+    <div class="right-col">
+      <div id="selBanner" style="display:none" class="sel-banner"></div>
+
+      <div class="toolbar">
+        <i class="ti ti-filter" style="color:#bbb;font-size:15px"></i>
+        <button class="fbtn on" onclick="setF('All',this)">All</button>
+        <button class="fbtn" onclick="setF('Approved',this)">Approved</button>
+        <button class="fbtn" onclick="setF('Pending',this)">Pending</button>
+        <button class="fbtn" onclick="setF('Under Review',this)">Under Review</button>
+        <button class="fbtn" onclick="setF('Rejected',this)">Rejected</button>
+        <div class="sbox">
+          <i class="ti ti-search" style="color:#bbb;font-size:13px"></i>
+          <input type="text" id="sq" placeholder="Search files…" oninput="render()">
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:85px"><i class="ti ti-file-text" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>File ID</th>
+              <th style="width:135px"><i class="ti ti-tag" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>Subject</th>
+              <th style="width:95px"><i class="ti ti-user-up" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>Sender</th>
+              <th style="width:115px"><i class="ti ti-user-check" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>Receiver</th>
+              <th style="width:80px"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>Date</th>
+              <th style="width:85px"><i class="ti ti-circle-dot" style="font-size:12px;vertical-align:-2px;margin-right:3px"></i>Status</th>
+              <th style="width:70px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FILES = [
+  {id:"EF-001",subject:"Tax Return Filing",sender:"R. Patil",receiver:"Income Tax Dept",date:"2026-06-01",status:"Approved"},
+  {id:"EF-002",subject:"GST Monthly Report",sender:"P. Sharma",receiver:"GST Council",date:"2026-06-03",status:"Pending"},
+  {id:"EF-003",subject:"Company Registration",sender:"A. Verma",receiver:"MCA Portal",date:"2026-05-28",status:"Under Review"},
+  {id:"EF-004",subject:"EPF Contribution",sender:"R. Patil",receiver:"EPFO Office",date:"2026-05-25",status:"Approved"},
+  {id:"EF-005",subject:"TDS Certificate Q4",sender:"M. Joshi",receiver:"Finance Dept",date:"2026-06-05",status:"Rejected"},
+  {id:"EF-006",subject:"Import Export License",sender:"S. Nair",receiver:"DGFT Office",date:"2026-06-07",status:"Pending"},
+  {id:"EF-007",subject:"Annual Audit Report",sender:"CA Firm LLP",receiver:"Board of Auditors",date:"2026-06-02",status:"Under Review"},
+  {id:"EF-008",subject:"PAN Card Application",sender:"N. Gupta",receiver:"NSDL Portal",date:"2026-05-20",status:"Approved"},
+  {id:"EF-009",subject:"Trademark Registration",sender:"R. Patil",receiver:"IP Office",date:"2026-06-10",status:"Pending"},
+  {id:"EF-010",subject:"FSSAI License Renewal",sender:"K. Mehta",receiver:"FSSAI",date:"2026-06-08",status:"Approved"},
+];
+
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOWS=["Su","Mo","Tu","We","Th","Fr","Sa"];
+let viewY=2026,viewM=5,selDate=null,activeF="All";
+const fileDates=new Set(FILES.map(f=>f.date));
+
+function buildCal(){
+  document.getElementById("calTitle").textContent=MONTHS[viewM]+" "+viewY;
+  const grid=document.getElementById("calGrid");
+  grid.innerHTML=DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join("");
+  const first=new Date(viewY,viewM,1).getDay();
+  const days=new Date(viewY,viewM+1,0).getDate();
+  const prevDays=new Date(viewY,viewM,0).getDate();
+  const today=new Date();
+  for(let i=0;i<first;i++){
+    grid.innerHTML+=`<div class="cal-day other-month">${prevDays-first+i+1}</div>`;
+  }
+  for(let d=1;d<=days;d++){
+    const ds=`${viewY}-${String(viewM+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const isToday=today.getFullYear()===viewY&&today.getMonth()===viewM&&today.getDate()===d;
+    const isSel=selDate===ds;
+    const hasF=fileDates.has(ds);
+    let cls="cal-day";
+    if(isToday&&!isSel)cls+=" today";
+    if(isSel)cls+=" selected";
+    if(hasF)cls+=" has-file";
+    grid.innerHTML+=`<div class="${cls}" onclick="selectDay('${ds}')">${d}</div>`;
+  }
+  const rem=(7-((first+days)%7))%7;
+  for(let i=1;i<=rem;i++) grid.innerHTML+=`<div class="cal-day other-month">${i}</div>`;
+}
+
+function prevMonth(){if(viewM===0){viewM=11;viewY--;}else viewM--;buildCal();}
+function nextMonth(){if(viewM===11){viewM=0;viewY++;}else viewM++;buildCal();}
+
+function selectDay(ds){
+  selDate=selDate===ds?null:ds;
+  buildCal();
+  const banner=document.getElementById("selBanner");
+  if(selDate){
+    const count=FILES.filter(f=>f.date===selDate).length;
+    const [y,m,d]=selDate.split("-");
+    const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    banner.style.display="flex";
+    banner.innerHTML=`<i class="ti ti-calendar-event"></i><span>${parseInt(d)} ${mo[parseInt(m)-1]} ${y} — <strong>${count}</strong> file${count!==1?"s":""} on this day</span><button onclick="clearDay()"><i class="ti ti-x"></i></button>`;
+  } else {
+    banner.style.display="none";
+  }
+  render();
+}
+
+function clearDay(){selDate=null;buildCal();document.getElementById("selBanner").style.display="none";render();}
+function setF(f,el){activeF=f;document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("on"));el.classList.add("on");render();}
+function badgeCls(s){if(s==="Approved")return"badge b-ok";if(s==="Pending")return"badge b-pend";if(s==="Rejected")return"badge b-rej";return"badge b-rev";}
+function fmtDate(d){const[y,m,day]=d.split("-");const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return`${parseInt(day)} ${mo[parseInt(m)-1]} ${y}`;}
+
+function render(){
+  const q=document.getElementById("sq").value.toLowerCase();
+  const rows=FILES.filter(f=>{
+    return(activeF==="All"||f.status===activeF)&&(!q||Object.values(f).some(v=>v.toLowerCase().includes(q)))&&(!selDate||f.date===selDate);
+  });
+  const tbody=document.getElementById("tbody");
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-row"><i class="ti ti-file-off" style="font-size:22px;display:block;margin:0 auto 6px"></i>No files match</td></tr>`;return;}
+  tbody.innerHTML=rows.map(f=>`
+    <tr>
+      <td style="font-family:monospace;font-size:11px;color:#888">${f.id}</td>
+      <td style="font-weight:500">${f.subject}</td>
+      <td>${f.sender}</td>
+      <td>${f.receiver}</td>
+      <td>${fmtDate(f.date)}</td>
+      <td><span class="${badgeCls(f.status)}">${f.status}</span></td>
+      <td>
+        <button class="abt" title="View"><i class="ti ti-eye"></i></button>
+        <button class="abt" title="Download"><i class="ti ti-download"></i></button>
+      </td>
+    </tr>`).join("");
+}
+
+function buildStats(){
+  const s=[
+    {l:"Total",v:FILES.length,ic:"ti-files",c:"#2563eb"},
+    {l:"Approved",v:FILES.filter(f=>f.status==="Approved").length,ic:"ti-circle-check",c:"#16a34a"},
+    {l:"Pending",v:FILES.filter(f=>f.status==="Pending").length,ic:"ti-clock",c:"#d97706"},
+    {l:"In review",v:FILES.filter(f=>f.status==="Under Review").length,ic:"ti-search",c:"#7c3aed"},
+  ];
+  document.getElementById("miniStats").innerHTML=s.map(x=>`<div class="mstat"><div class="mstat-label"><i class="ti ${x.ic}" style="color:${x.c};font-size:13px"></i>${x.l}</div><div class="mstat-val">${x.v}</div></div>`).join("");
+}
+
+function buildActivity(){
+  const colors={"Approved":"#16a34a","Pending":"#d97706","Rejected":"#dc2626","Under Review":"#2563eb"};
+  document.getElementById("activityFeed").innerHTML=[...FILES].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(f=>`
+    <div class="activity-row">
+      <span class="act-dot" style="background:${colors[f.status]}"></span>
+      <span class="act-text">${f.subject}</span>
+      <span class="act-time">${fmtDate(f.date).slice(0,-5)}</span>
+    </div>`).join("");
+}
+
+buildCal(); buildStats(); buildActivity(); render();
+</script>
+</body>
+</html>
